@@ -1,0 +1,73 @@
+# ---------------------------------------------
+# .gitignore for a .NET / ASP.NET Core project
+# ---------------------------------------------
+
+## Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+build/
+bld/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+## Visual Studio / IDE files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## Test / coverage results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+TestResults/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## ---------------------------------------------
+## SECRETS — never commit real credentials
+## Keep real DB passwords / API keys in
+## .NET user-secrets (dev) and environment
+## variables (production), NOT in these files.
+## appsettings.json is COMMITTED — use placeholders only.
+## ---------------------------------------------
+appsettings.*.Local.json
+secrets.json
+*.pfx
+*.key
+.env
+.env.*
+
+## OS files
+.DS_Store
+Thumbs.db
+desktop.ini
