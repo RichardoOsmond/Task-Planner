@@ -1,6 +1,50 @@
-@ToDoApp_HostAddress = http://localhost:5291
+@ToDoApp_HostAddress = https://localhost:7066
 
-GET {{ToDoApp_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{ToDoApp_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "goalId": 1,
+  "userId": 1,
+  "name": "Task 1",
+  "duration": 30,
+  "description": "Testing Create Task Endpoint"
+}
 
 ###
+
+### 1. Get all tasks
+GET {{ToDoApp_HostAddress}}/api/tasks
+Accept: application/json
+
+### 2. Create a task
+POST {{ToDoApp_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "goalId": 1,
+  "userId": 1,
+  "name": "Task 2",
+  "duration": 45,
+  "description": "Second task"
+}
+
+### 3. Get one task (ownership: task id + user id)
+GET {{ToDoApp_HostAddress}}/api/tasks/1/user/1
+Accept: application/json
+
+### 4. Update task 1
+PUT {{ToDoApp_HostAddress}}/api/tasks/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "goalId": 1,
+  "userId": 1,
+  "name": "Task 1 (edited)",
+  "duration": 60,
+  "description": "Updated description"
+}
+
+### 5. Delete task 2
+DELETE {{ToDoApp_HostAddress}}/api/tasks/2
