@@ -10,5 +10,6 @@ namespace ToDoApp.Data
         }
 
         public DbSet<TaskItem> Tasks { get; set; }
+        public DbSet<Goal> Goals { get; set; }
     }
 }
