@@ -46,5 +46,8 @@ Content-Type: application/json
   "description": "Updated description"
 }
 
-### 5. Delete task 2
+### 5. Toggle Completion
+PATCH {{ToDoApp_HostAddress}}/api/tasks/1/complete
+
+### 6. Delete task 2
 DELETE {{ToDoApp_HostAddress}}/api/tasks/2

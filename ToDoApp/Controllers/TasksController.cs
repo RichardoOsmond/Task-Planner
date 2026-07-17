@@ -14,9 +14,31 @@ namespace ToDoApp.Controllers
         public TasksController(AppDbContext context) { _context = context; }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks()
+        public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks([FromQuery] int? goalId, [FromQuery] int? userId, 
+            [FromQuery] string? status, [FromQuery] string? due)
         {
-            return await _context.Tasks.ToListAsync();
+            var query = _context.Tasks.AsQueryable();
+            if (userId != null)
+            {
+                query = query.Where(T => T.UserId == userId);
+            }
+            if (goalId != null)
+            {
+                query = query.Where(T => T.GoalId == goalId);
+            }
+            if (status == "completed")
+            {
+                query = query.Where(T => T.CompletedDate != null);
+            }
+            if (status == "pending")
+            {
+                query = query.Where(T => T.CompletedDate == null);
+            }
+            if (due == "today")
+            {
+                query = query.Where(T => T.DueDate != null && T.DueDate.Value.Date == DateTime.UtcNow.Date);
+            }
+            return await query.ToListAsync();
         }
 
         // Fulfilled the get one task, ownership checked endpoint
@@ -54,7 +76,29 @@ namespace ToDoApp.Controllers
             _context.Tasks.Add(newTask);
             await _context.SaveChangesAsync();
 
+            // Writes to Activity Here
+            // Placeholder (Activity Table does not exist yet
+
             return CreatedAtAction(nameof(GetTask), new { taskId = newTask.Id, userId = newTask.UserId }, newTask);
+        }
+
+        // Fulfilled the toggle task completion endpoint
+        [HttpPatch("{id}/complete")]
+        public async Task<IActionResult> ToggleCompletion(int id)
+        {
+            var task = await _context.Tasks.FindAsync(id);
+            if (task == null) { return NotFound(); }
+
+            task.CompletedDate = task.CompletedDate == null ? DateTime.UtcNow : null;
+
+            if (task.CompletedDate != null)
+            {
+                // Writes to Activity Here
+                // Placeholder (Activity Table does not exist yet
+            }
+
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         // Fulfilled the delete a task endpoint
