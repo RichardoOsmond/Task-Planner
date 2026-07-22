@@ -77,7 +77,7 @@ namespace ToDoApp.Controllers
             await _context.SaveChangesAsync();
 
             // Writes to Activity Here
-            // Placeholder (Activity Table does not exist yet
+            // Placeholder (Activity Table does not exist yet)
 
             return CreatedAtAction(nameof(GetTask), new { taskId = newTask.Id, userId = newTask.UserId }, newTask);
         }
@@ -94,7 +94,7 @@ namespace ToDoApp.Controllers
             if (task.CompletedDate != null)
             {
                 // Writes to Activity Here
-                // Placeholder (Activity Table does not exist yet
+                // Placeholder (Activity Table does not exist yet)
             }
 
             await _context.SaveChangesAsync();

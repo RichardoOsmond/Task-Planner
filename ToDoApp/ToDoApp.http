@@ -1,5 +1,6 @@
 @ToDoApp_HostAddress = https://localhost:7066
 
+###############  TASKS  ###############
 POST {{ToDoApp_HostAddress}}/api/tasks
 Content-Type: application/json
 
@@ -50,4 +51,43 @@ Content-Type: application/json
 PATCH {{ToDoApp_HostAddress}}/api/tasks/1/complete
 
 ### 6. Delete task 2
-DELETE {{ToDoApp_HostAddress}}/api/tasks/2
+DELETE {{ToDoApp_HostAddress}}/api/tasks/3
+
+
+
+###############  GOALS  ###############
+### 1. Create main goal  → note its id
+POST {{ToDoApp_HostAddress}}/api/goals
+Content-Type: application/json
+
+{ "name": "Main Goal", "description": "top level", "parentGoalId": null }
+
+### 2. Create sub-goal under main  (put main's id in parentGoalId)
+POST {{ToDoApp_HostAddress}}/api/goals
+Content-Type: application/json
+
+{ "name": "Sub Goal", "description": "phase", "parentGoalId": 3 }
+
+### 3. Task on the main goal
+POST {{ToDoApp_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{ "name": "Main task", "goalId": 3, "userId": 1, "duration": 10, "description": "" }
+
+### 4. Task on the sub-goal
+POST {{ToDoApp_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{ "name": "Sub task", "goalId": 4, "userId": 1, "duration": 10, "description": "" }
+
+### 5. KEEP path — delete main goal, keep everything else
+DELETE {{ToDoApp_HostAddress}}/api/goals/1?deleteAll=false
+
+### NUKE path — delete everything under the goal
+DELETE {{ToDoApp_HostAddress}}/api/goals/2?deleteAll=true
+
+### 6. Verify goals — Sub Goal should now appear as top-level
+GET {{ToDoApp_HostAddress}}/api/goals
+
+### 7. Verify tasks — Main task GoalId=null (standalone), Sub task still GoalId=2
+GET {{ToDoApp_HostAddress}}/api/tasks
