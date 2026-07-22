@@ -91,3 +91,17 @@ GET {{ToDoApp_HostAddress}}/api/goals
 
 ### 7. Verify tasks — Main task GoalId=null (standalone), Sub task still GoalId=2
 GET {{ToDoApp_HostAddress}}/api/tasks
+
+
+
+### Register
+POST {{ToDoApp_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{ "userName": "richard", "email": "richard@test.com", "password": "Test1234!" }
+
+### Login
+POST {{ToDoApp_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{ "userName": "richard", "password": "Test1234!" }
