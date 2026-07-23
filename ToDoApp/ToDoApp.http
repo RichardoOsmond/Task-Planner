@@ -20,11 +20,11 @@ Accept: application/json
 
 ### 2. Create a task
 POST {{ToDoApp_HostAddress}}/api/tasks
+Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
-  "goalId": 1,
-  "userId": 1,
+  "goalId": null,
   "name": "Task 2",
   "duration": 45,
   "description": "Second task"
@@ -35,7 +35,8 @@ GET {{ToDoApp_HostAddress}}/api/tasks/1/user/1
 Accept: application/json
 
 ### 4. Update task 1
-PUT {{ToDoApp_HostAddress}}/api/tasks/1
+PUT {{ToDoApp_HostAddress}}/api/tasks/7
+Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
@@ -105,3 +106,38 @@ POST {{ToDoApp_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 { "userName": "richard", "password": "Test1234!" }
+
+### Register user 2
+POST {{ToDoApp_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{ "userName": "sarah", "email": "sarah@test.com", "password": "Test1234!" }
+
+### Login user 2  → copy this token
+POST {{ToDoApp_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{ "userName": "sarah", "password": "Test1234!" }
+
+### As RICHARD — create a task (uses richard's token) (Change the Token to the token given during login)
+POST {{ToDoApp_HostAddress}}/api/tasks
+Authorization: Bearer RICHARD_TOKEN
+Content-Type: application/json
+
+{ "name": "Richard's private task", "duration": 30, "description": "" }
+
+### As RICHARD — list tasks (should show his task)
+GET {{ToDoApp_HostAddress}}/api/tasks
+Authorization: Bearer RICHARD_TOKEN
+
+### As SARAH — list tasks (should be EMPTY — she can't see Richard's)
+GET {{ToDoApp_HostAddress}}/api/tasks
+Authorization: Bearer SARAH_TOKEN
+
+### As SARAH — try to fetch Richard's task by id (should be 404, not his data)
+GET {{ToDoApp_HostAddress}}/api/tasks/7
+Authorization: Bearer SARAH_TOKEN
+
+### As SARAH — try to DELETE Richard's task (should be 404, and his task survives)
+DELETE {{ToDoApp_HostAddress}}/api/tasks/1
+Authorization: Bearer SARAH_TOKEN

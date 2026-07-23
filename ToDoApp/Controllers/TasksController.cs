@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using ToDoApp.Data;
 using ToDoApp.Models;
 
 namespace ToDoApp.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class TasksController : ControllerBase
     {
@@ -14,14 +17,12 @@ namespace ToDoApp.Controllers
         public TasksController(AppDbContext context) { _context = context; }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks([FromQuery] int? goalId, [FromQuery] int? userId, 
+        public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks([FromQuery] int? goalId, 
             [FromQuery] string? status, [FromQuery] string? due)
         {
             var query = _context.Tasks.AsQueryable();
-            if (userId != null)
-            {
-                query = query.Where(T => T.UserId == userId);
-            }
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            query = query.Where(T => T.UserId == userId);
             if (goalId != null)
             {
                 query = query.Where(T => T.GoalId == goalId);
@@ -42,10 +43,11 @@ namespace ToDoApp.Controllers
         }
 
         // Fulfilled the get one task, ownership checked endpoint
-        [HttpGet("{taskId}/user/{userId}")]
-        public async Task<ActionResult<TaskItem>> GetTask(int taskId, int userId)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<TaskItem>> GetTask(int id)
         {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
             if (task == null) { return NotFound(); }
 
             return task;
@@ -55,9 +57,10 @@ namespace ToDoApp.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTask(int id, TaskItem updatedTask)
         {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             if (id != updatedTask.Id) { return BadRequest(); }
             var existingTask = await _context.Tasks.FindAsync(id);
-            if (existingTask == null) { return NotFound(); }
+            if (existingTask == null || existingTask.UserId != userId) { return NotFound(); }
 
             existingTask.Name = updatedTask.Name;
             existingTask.Description = updatedTask.Description;
@@ -72,6 +75,8 @@ namespace ToDoApp.Controllers
         [HttpPost]
         public async Task<ActionResult<TaskItem>> CreateTask(TaskItem newTask)
         {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            newTask.UserId = userId;
             newTask.CreatedDate = DateTime.UtcNow;
             _context.Tasks.Add(newTask);
             await _context.SaveChangesAsync();
@@ -79,15 +84,16 @@ namespace ToDoApp.Controllers
             // Writes to Activity Here
             // Placeholder (Activity Table does not exist yet)
 
-            return CreatedAtAction(nameof(GetTask), new { taskId = newTask.Id, userId = newTask.UserId }, newTask);
+            return CreatedAtAction(nameof(GetTask), new { id = newTask.Id }, newTask);
         }
 
         // Fulfilled the toggle task completion endpoint
         [HttpPatch("{id}/complete")]
         public async Task<IActionResult> ToggleCompletion(int id)
         {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var task = await _context.Tasks.FindAsync(id);
-            if (task == null) { return NotFound(); }
+            if (task == null || task.UserId != userId) { return NotFound(); }
 
             task.CompletedDate = task.CompletedDate == null ? DateTime.UtcNow : null;
 
@@ -105,8 +111,9 @@ namespace ToDoApp.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTask(int id)
         {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var task = await _context.Tasks.FindAsync(id);
-            if (task == null) { return NotFound(); }
+            if (task == null || task.UserId != userId) { return NotFound(); }
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
             return NoContent();
