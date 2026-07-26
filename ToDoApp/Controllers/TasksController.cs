@@ -59,12 +59,20 @@ namespace ToDoApp.Controllers
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             if (id != updatedTask.Id) { return BadRequest(); }
+            if (updatedTask.GoalId != null)
+            {
+                if (!await _context.Goals.AnyAsync(G => G.UserId == userId && G.Id == updatedTask.GoalId))
+                {
+                    return BadRequest("Goal does not exist");
+                }
+            }
             var existingTask = await _context.Tasks.FindAsync(id);
             if (existingTask == null || existingTask.UserId != userId) { return NotFound(); }
 
             existingTask.Name = updatedTask.Name;
             existingTask.Description = updatedTask.Description;
             existingTask.Duration = updatedTask.Duration;
+            existingTask.GoalId = updatedTask.GoalId;
             existingTask.CompletedDate = updatedTask.CompletedDate;
             existingTask.DueDate = updatedTask.DueDate;
 
@@ -78,6 +86,10 @@ namespace ToDoApp.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             newTask.UserId = userId;
             newTask.CreatedDate = DateTime.UtcNow;
+            if (newTask.GoalId != null)
+            {
+                if (!await _context.Goals.AnyAsync(G => G.UserId == userId && G.Id == newTask.GoalId)) { return BadRequest("Goal does not exist"); }
+            }
             _context.Tasks.Add(newTask);
             await _context.SaveChangesAsync();
 

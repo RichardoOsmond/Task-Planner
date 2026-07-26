@@ -20,6 +20,11 @@ namespace ToDoApp.Data
                 .HasForeignKey(G => G.ParentGoalId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Goal>()
+                .ToTable(T => T.HasCheckConstraint(
+                    "CK_Goal_NoSelfParent",
+                    "\"ParentGoalId\" IS NULL OR \"Id\" <> \"ParentGoalId\""));
+
             modelBuilder.Entity<TaskItem>()
                 .HasOne(T => T.Goal).WithMany(G => G.Tasks)
                 .HasForeignKey(T => T.GoalId)
