@@ -29,9 +29,18 @@ namespace ToDoApp.Data
                 .HasOne(T => T.Goal).WithMany(G => G.Tasks)
                 .HasForeignKey(T => T.GoalId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Activity>()
+                .HasOne(A => A.User).WithMany(U => U.Activities)
+                .HasForeignKey(A => A.UserId);
+
+            modelBuilder.Entity<Activity>()
+                .Property(A => A.ActivityType)
+                .HasConversion<string>();
         }
 
         public DbSet<TaskItem> Tasks { get; set; }
         public DbSet<Goal> Goals { get; set; }
+        public DbSet<Activity> Activities { get; set; }
     }
 }

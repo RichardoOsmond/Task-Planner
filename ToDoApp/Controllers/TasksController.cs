@@ -91,10 +91,14 @@ namespace ToDoApp.Controllers
                 if (!await _context.Goals.AnyAsync(G => G.UserId == userId && G.Id == newTask.GoalId)) { return BadRequest("Goal does not exist"); }
             }
             _context.Tasks.Add(newTask);
-            await _context.SaveChangesAsync();
 
-            // Writes to Activity Here
-            // Placeholder (Activity Table does not exist yet)
+            _context.Activities.Add(new Activity
+            {
+                UserId = userId,
+                ActivityType = ActivityType.TaskCreated,
+                CreatedDate = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetTask), new { id = newTask.Id }, newTask);
         }
@@ -111,8 +115,25 @@ namespace ToDoApp.Controllers
 
             if (task.CompletedDate != null)
             {
-                // Writes to Activity Here
-                // Placeholder (Activity Table does not exist yet)
+                _context.Activities.Add(new Activity
+                {
+                    UserId = userId,
+                    ActivityType = ActivityType.TaskCompleted,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
+
+            if (task.GoalId != null)
+            {
+                if (await GoalComplete(task.GoalId.Value))
+                {
+                    _context.Activities.Add(new Activity
+                    {
+                        UserId = userId,
+                        ActivityType = ActivityType.GoalCompleted,
+                        CreatedDate = DateTime.UtcNow
+                    });
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -129,6 +150,17 @@ namespace ToDoApp.Controllers
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // Helper Method
+        // Currently does not account for SubGoals Completion (Under Progress)
+        // Double Logging Issue (Under Progress)
+        // Should move to GoalsController
+        private async Task<bool> GoalComplete(int goalId)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            return await _context.Goals
+                .AnyAsync(G => G.UserId == userId && G.Id == goalId && G.Tasks.Any() && G.Tasks.All(T => T.CompletedDate != null));
         }
     }
 }

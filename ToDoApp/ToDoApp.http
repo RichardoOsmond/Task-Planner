@@ -50,6 +50,7 @@ Content-Type: application/json
 
 ### 5. Toggle Completion
 PATCH {{ToDoApp_HostAddress}}/api/tasks/1/complete
+Authorization: Bearer TOKEN
 
 ### 6. Delete task 2
 DELETE {{ToDoApp_HostAddress}}/api/tasks/3
@@ -59,6 +60,7 @@ DELETE {{ToDoApp_HostAddress}}/api/tasks/3
 ###############  GOALS  ###############
 ### 1. Create main goal  → note its id
 POST {{ToDoApp_HostAddress}}/api/goals
+Authorization: Bearer TOKEN
 Content-Type: application/json
 
 { "name": "Main Goal", "description": "top level", "parentGoalId": null }

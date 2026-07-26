@@ -46,10 +46,14 @@ namespace ToDoApp.Controllers
             }
             newGoal.CreatedDate = DateTime.UtcNow;
             _context.Goals.Add(newGoal);
-            await _context.SaveChangesAsync();
 
-            // Writes to Activity Here
-            // Placeholder (Activity Table does not exist yet)
+            _context.Activities.Add(new Activity
+            {
+                UserId = userId,
+                ActivityType = ActivityType.GoalCreated,
+                CreatedDate = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetGoal), new { id = newGoal.Id }, newGoal);
         }
