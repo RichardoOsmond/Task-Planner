@@ -37,6 +37,10 @@ namespace ToDoApp.Data
             modelBuilder.Entity<Activity>()
                 .Property(A => A.ActivityType)
                 .HasConversion<string>();
+
+            modelBuilder.Entity<User>()
+                .Property(U => U.TimeZoneId)
+                .HasDefaultValue("Asia/Kuala_Lumpur");
         }
 
         public DbSet<TaskItem> Tasks { get; set; }
