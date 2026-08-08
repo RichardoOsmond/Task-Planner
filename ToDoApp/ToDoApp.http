@@ -117,6 +117,11 @@ GET {{ToDoApp_HostAddress}}/api/analytics/productivity?range=Year
 Authorization: Bearer Token
 Accept: application/json
 
+### User's Activity
+GET {{ToDoApp_HostAddress}}/api/analytics/activity
+Authorization: Bearer Token
+Accept: application/json
+
 
 
 ### Register

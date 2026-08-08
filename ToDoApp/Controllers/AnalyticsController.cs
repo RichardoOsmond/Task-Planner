@@ -112,5 +112,32 @@ namespace ToDoApp.Controllers
             }
             return Ok(result);
         }
+
+        [HttpGet("activity")]
+        public async Task<IActionResult> GetActivity([FromQuery] int days = 365)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var timeZoneId = await _context.Users.Where(U => U.Id == userId).Select(U => U.TimeZoneId).FirstAsync();
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var localToday = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone).Date;
+            var windowStartLocal = localToday.AddDays(-(days - 1));
+            var startUtc = TimeZoneInfo.ConvertTimeToUtc(windowStartLocal, timeZone);
+            var endUtc = TimeZoneInfo.ConvertTimeToUtc(localToday.AddDays(1), timeZone);
+            var activities = await _context.Activities.Where(A => A.UserId == userId &&
+            A.CreatedDate >= startUtc && A.CreatedDate < endUtc).Select(A => A.CreatedDate).ToListAsync();
+            var activityCount = activities.GroupBy(A => TimeZoneInfo.ConvertTimeFromUtc(A, timeZone).Date)
+                .ToDictionary(g => g.Key, g => g.Count());
+            var result = new List<object>();
+            for (int i = days - 1; i >= 0; i--)
+            {
+                var day = localToday.AddDays(-i);
+                result.Add(new
+                {
+                    date = day.ToString("yyyy-MM-dd"),
+                    count = activityCount.TryGetValue(day, out var c) ? c : 0
+                });
+            }
+            return Ok(result);
+        }
     }
 }
