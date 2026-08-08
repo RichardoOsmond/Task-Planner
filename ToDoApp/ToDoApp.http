@@ -97,6 +97,28 @@ GET {{ToDoApp_HostAddress}}/api/tasks
 
 
 
+### User's Productivity (Week)
+GET {{ToDoApp_HostAddress}}/api/analytics/productivity?range=Week
+Authorization: Bearer Token
+Accept: application/json
+
+### User's Productivity (Month)
+GET {{ToDoApp_HostAddress}}/api/analytics/productivity?range=Month
+Authorization: Bearer Token
+Accept: application/json
+
+### User's Productivity (6 Months)
+GET {{ToDoApp_HostAddress}}/api/analytics/productivity?range=SixMonths
+Authorization: Bearer Token
+Accept: application/json
+
+### User's Productivity (Year)
+GET {{ToDoApp_HostAddress}}/api/analytics/productivity?range=Year
+Authorization: Bearer Token
+Accept: application/json
+
+
+
 ### Register
 POST {{ToDoApp_HostAddress}}/api/auth/register
 Content-Type: application/json

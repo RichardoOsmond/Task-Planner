@@ -5,6 +5,7 @@ using System.Security.Claims;
 using ToDoApp.Models;
 using ToDoApp.Data;
 using ToDoApp.Helpers;
+using System.Security.Principal;
 
 namespace ToDoApp.Controllers
 {
@@ -40,6 +41,76 @@ namespace ToDoApp.Controllers
             var completedDates = rawCompletedDates.Select(D => TimeZoneInfo.ConvertTimeFromUtc(D!.Value, timeZone).Date).ToHashSet();
             var streak = StreakCalculator.CalculateStreak(completedDates, localToday);
             return Ok(new {todayCount, totalCompletedTasks, totalTasks, pendingTasks, completionRate, activeGoals, streak});
+        }
+
+        [HttpGet("productivity")]
+        public async Task<IActionResult> GetProductivity([FromQuery] ProductivityRange range)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var timeZoneId = await _context.Users.Where(U => U.Id == userId).Select(U => U.TimeZoneId).FirstAsync();
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var localToday = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone).Date;
+            BucketGranularity bucketGranularity;
+            var count = 0;
+            switch (range)
+            {
+                case ProductivityRange.Week:
+                    bucketGranularity = BucketGranularity.Day;
+                    count = 7;
+                    break;
+                case ProductivityRange.Month:
+                    bucketGranularity = BucketGranularity.Day;
+                    count = 30;
+                    break;
+                case ProductivityRange.SixMonths:
+                    bucketGranularity = BucketGranularity.Week;
+                    count = 26;
+                    break;
+                case ProductivityRange.Year:
+                    bucketGranularity = BucketGranularity.Month;
+                    count = 12;
+                    break;
+                default:
+                    bucketGranularity = BucketGranularity.Day;
+                    count = 30;
+                    break;
+            }
+
+            DateTime BucketStart(DateTime d) => bucketGranularity switch
+            {
+                BucketGranularity.Day => d,
+                BucketGranularity.Week => d.AddDays(-(((int)d.DayOfWeek + 6) % 7)),
+                BucketGranularity.Month => new DateTime(d.Year, d.Month, 1),
+                _ => d
+            };
+
+            DateTime StepBack(DateTime b, int n) => bucketGranularity switch
+            {
+                BucketGranularity.Day => b.AddDays(-n),
+                BucketGranularity.Week => b.AddDays(-7 * n),
+                BucketGranularity.Month => b.AddMonths(-n),
+                _ => b.AddDays(-n)
+            };
+
+            var currentBucket = BucketStart(localToday);
+            var windowStartLocal = StepBack(currentBucket, count - 1);
+            var startUtc = TimeZoneInfo.ConvertTimeToUtc(windowStartLocal, timeZone);
+            var endUtc = TimeZoneInfo.ConvertTimeToUtc(localToday.AddDays(1), timeZone);
+            var completedTasks = await _context.Tasks.Where(T => T.UserId == userId && T.CompletedDate != null && 
+            T.CompletedDate.Value >= startUtc && T.CompletedDate.Value < endUtc).Select(T => T.CompletedDate!.Value).ToListAsync();
+            var taskCount = completedTasks.GroupBy(T => BucketStart(TimeZoneInfo.ConvertTimeFromUtc(T, timeZone).Date))
+                .ToDictionary(g => g.Key, g => g.Count());
+            var result = new List<object>();
+            for (int i = count - 1; i >= 0; i--)
+            {
+                var bucket = StepBack(currentBucket, i);
+                result.Add(new
+                {
+                    date = bucket.ToString("yyyy-MM-dd"),
+                    count = taskCount.TryGetValue(bucket, out var c) ? c : 0
+                });
+            }
+            return Ok(result);
         }
     }
 }
