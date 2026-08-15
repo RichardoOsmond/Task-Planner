@@ -42,9 +42,36 @@ builder.Services.AddAuthentication(options =>
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Request.Headers.Authorization))
+                {
+                    var cookieToken = context.Request.Cookies["access_token"];
+                    if (!string.IsNullOrEmpty(cookieToken))
+                    {
+                        context.Token = cookieToken;
+                    }
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
@@ -55,6 +82,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 

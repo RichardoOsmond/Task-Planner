@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -69,7 +70,39 @@ namespace ToDoApp.Controllers
             
             if (!(await _userManager.CheckPasswordAsync(user, loginDto.Password))) { return Unauthorized("Invalid Username or Password"); }
             var token = GenerateToken(user);
-            return Ok(new { token });
+
+            Response.Cookies.Append("access_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Path = "/",
+                MaxAge = TimeSpan.FromHours(2)
+            });
+            return Ok(new { user.UserName, user.Email });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("access_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Path = "/"
+            });
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> Me()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) { return Unauthorized(); }
+            return Ok(new { user.UserName, user.Email });
         }
     }
 }
