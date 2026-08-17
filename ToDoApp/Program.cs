@@ -20,6 +20,7 @@ options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")
 builder.Services.AddIdentityCore<User>(options =>
 {
     options.Password.RequiredLength = 8;
+    options.User.RequireUniqueEmail = true;
 })
     .AddRoles<IdentityRole<int>>()
     .AddEntityFrameworkStores<AppDbContext>()
